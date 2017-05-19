@@ -11,25 +11,35 @@ public class Eve : MonoBehaviour {
     private Animator anim;
     private NavMeshAgent nav;
     private Rigidbody rb;
-    public Slider energyBar;
-    public Text energyText;
+    private AudioSource punch;
+    private AudioSource pickup;
+    private AudioSource[] audios;
+
+
 
     private float speed = 15.0f;
-    private float rotateSpeed = 50.0f;
+    private float rotateSpeed = 60.0f;
     private float jogTime = 0;
-    private int energy;
     private string currentlyFighting = "";
     private GameObject currentAlien;
     private bool canHit = false;
+    private bool canAttack = true;
+    private bool canMove = false;
+    private bool level2 = true;
+    private bool level3 = true;
+    private float attackTime = 0;
     
 
     private Vector3 initialPos;
     private EveHealth healthInfo;
     private AlienHealth alienHealth;
     private GameObject ship;
-    
+    public Text gameText;
+    private float gameTimer = 0;
+    private float findShip = 0;
 
-    
+
+
 
 
     // Use this for initialization
@@ -38,98 +48,182 @@ public class Eve : MonoBehaviour {
         nav = GetComponent<NavMeshAgent>();
         rb = GetComponent<Rigidbody>();
         healthInfo = GetComponent<EveHealth>();
+
+        audios = GetComponents<AudioSource>();
+        pickup = audios[0];
+        punch = audios[1];
  
 
         ship = GameObject.Find("SpaceShip");
-        energyBar = GameObject.Find("EnergyBar").GetComponent<Slider>();
-        energyBar.maxValue = 50;
-        energyBar.value = 0;
-
-        energyText = GameObject.Find("EnergyText").GetComponent<Text>();
-        energyText.text = "0";
+        
 
         initialPos = new Vector3(292, 0.46f, 76);
         transform.position = initialPos;
-        energy = 0;
+        gameText = GameObject.Find("GameText").GetComponent<Text>();
 
+
+    }
+    
+    void Update()
+    {
+        gameTimer += Time.deltaTime;
     }
 
     // Update is called once per frame
     void FixedUpdate() {
+
         getDistanceFromShip();
+
+        if(healthInfo.getEnergy() >= ENERGY_NEEDED)
+        {
+            findShip += Time.deltaTime;
+            gameText.text = "This should be enough energy. I should find my ship.";
+            if (findShip >= 3.0f)
+            {
+                gameText.text = "";
+            }
+        }
+        
+
+        if(!canMove)
+        {
+            if (gameTimer >= 1.5f && gameTimer < 4.0f)
+            {
+                gameText.text = "What is this place? Where is my ship?";
+            }
+            else if (gameTimer >= 4.0f && gameTimer < 7.0f)
+            {
+                gameText.text = "Eve this is your commander. You crash landed on this planet.";
+                gameText.color = Color.cyan;
+            }
+            else if (gameTimer >= 7.0f && gameTimer < 11.0f)
+            {
+                gameText.text = "Analyzing the planet we've noticed there's a lot of energy.";
+            }
+            else if (gameTimer >= 11.0f && gameTimer < 15.0f)
+            {
+                gameText.text = "Collect enough energy and find your ship then you will be able to leave.";
+            }
+            else if (gameTimer >= 15.0f && gameTimer < 19.0f)
+            {
+                gameText.text = "Be careful of the enemies here. But you may be able to harness their energy as well.";
+            }
+            else if (gameTimer >= 19.0f && gameTimer < 21.0f)
+            {
+                gameText.text = "Good luck!";
+            }
+            else if (gameTimer >= 21.0f && gameTimer < 24.0f)
+            {
+                gameText.text = "Okay I need to collect enough energy to get out of here.";
+                gameText.color = Color.white;
+            }
+            else if (gameTimer >= 24.0f)
+            {
+                gameText.text = "";
+                canMove = true;
+            }
+        }
         
         if(isFighting())
         {
             getFightDistance();
-            if(currentAlien != null && anim.GetBool("Punch") && canHit)
+            if(currentAlien != null && Input.GetKeyUp(KeyCode.A) && canHit)
             {
-                Debug.Log("caling alien damage");
-                alienHealth.Damage();
+                if (healthInfo.getStamina() >= 1)
+                {
+                    healthInfo.hitEnemy();
+                    Debug.Log("calling alien damage");
+                    alienHealth.Damage();
+                    canAttack = false;
+                }
             }
         }
 
-
-        if (Input.GetKey(KeyCode.UpArrow)) {
-            transform.position += transform.forward * Time.deltaTime * speed;
-            anim.SetBool("isJogging", true);
-        } else if (Input.GetKey(KeyCode.RightArrow))
+        if (!canAttack)
         {
-            transform.Rotate(Vector3.up * rotateSpeed * Time.deltaTime);
-            anim.SetBool("isJogging", true);
-        } else if (Input.GetKey(KeyCode.LeftArrow))
-        {
-            transform.Rotate(-Vector3.up * rotateSpeed * Time.deltaTime);
-            anim.SetBool("isJogging", true);
-        } else if (Input.GetKey(KeyCode.DownArrow))
-        {
-            transform.position += -transform.forward * Time.deltaTime * speed;
-            anim.SetBool("isJogging", true);
+            attackTime += Time.deltaTime;
         }
 
-        if(Input.GetKeyUp(KeyCode.UpArrow))
+        if (attackTime >= 2.0f)
         {
-            anim.SetBool("isJogging", false);
-        } else if (Input.GetKeyUp(KeyCode.DownArrow))
-        {
-            anim.SetBool("isJogging", false);
-        } else if (Input.GetKeyUp(KeyCode.RightArrow))
-        {
-            anim.SetBool("isJogging", false);
-        } else if (Input.GetKeyUp(KeyCode.LeftArrow))
-        {
-            anim.SetBool("isJogging", false);
+            canAttack = true;
         }
 
-        if(Input.GetKeyDown(KeyCode.A))
+
+        if (canMove)
         {
-            if (healthInfo.getStamina() >= 1)
+            if (Input.GetKeyDown(KeyCode.A))
             {
-                healthInfo.hitEnemy();
+                anim.SetTrigger("Punch");
+                punch.Play();
+                healthInfo.decreaseStamina();
+            }
+
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                transform.position += transform.forward * Time.deltaTime * speed;
+                anim.SetBool("isJogging", true);
+
+            }
+            else if (Input.GetKey(KeyCode.RightArrow))
+            {
+                transform.Rotate(Vector3.up * rotateSpeed * Time.deltaTime);
+                anim.SetBool("isJogging", true);
+
+            }
+            else if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                transform.Rotate(-Vector3.up * rotateSpeed * Time.deltaTime);
+                anim.SetBool("isJogging", true);
+
+            }
+            else if (Input.GetKey(KeyCode.DownArrow))
+            {
+                transform.position += -transform.forward * Time.deltaTime * speed;
+                anim.SetBool("isJogging", true);
+                
+            }
+
+            if (Input.GetKeyUp(KeyCode.UpArrow))
+            {
+                anim.SetBool("isJogging", false);
+            }
+            else if (Input.GetKeyUp(KeyCode.DownArrow))
+            {
+                anim.SetBool("isJogging", false);
+            }
+            else if (Input.GetKeyUp(KeyCode.RightArrow))
+            {
+                anim.SetBool("isJogging", false);
+            }
+            else if (Input.GetKeyUp(KeyCode.LeftArrow))
+            {
+                anim.SetBool("isJogging", false);
+            }
+
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                if (anim.GetBool("isJogging"))
+                {
+                    anim.SetTrigger("jumpFromJog");
+                }
+                else
+                {
+                    anim.SetTrigger("jumpFromIdle");
+                }
             }
         }
+        
 
-        if (Input.GetKeyUp(KeyCode.A))
-        {
-            anim.SetBool("Punch", false);
-        }
-
-        if(Input.GetKeyDown(KeyCode.Space))
-        {
-            if(anim.GetBool("isJogging"))
-            {
-                anim.SetTrigger("jumpFromJog");
-            } else
-            {
-                anim.SetTrigger("jumpFromIdle");
-            }
-        }
-
-        if(energy >= 15 && energy < 30)
+        if(healthInfo.getEnergy() >= 15 && healthInfo.getEnergy() < 30 && level2)
         {
             healthInfo.setLevel(2);
-        } else if (energy >= 30)
+            level2 = false;
+        } else if (healthInfo.getEnergy() >= 30 && level3)
         {
             healthInfo.setLevel(3);
+            level3 = false;
         }
     }
 
@@ -146,6 +240,7 @@ public class Eve : MonoBehaviour {
         } else
         {
             currentlyFighting = healthInfo.getFighting();
+            currentAlien = null;
             healthInfo.inRange(false);
             return false;
         }
@@ -177,13 +272,22 @@ public class Eve : MonoBehaviour {
 
         if(distance <= 7)
         {
-            if(energy >= ENERGY_NEEDED)
+            if(healthInfo.getEnergy() >= ENERGY_NEEDED)
             {
-                Debug.Log("Press Enter to start ship");
+                
+                gameText.text = "Press Enter to start ship.";
+                Debug.Log(gameText.text);
+                if (Input.GetKeyDown(KeyCode.KeypadEnter))
+                {
+                    gameText.text = "YOU WIN!";
+                }
             } else
             {
-                Debug.Log("You don't have enough energy");
+                gameText.text = "I need more energy.";
             }
+        } else
+        {
+            gameText.text = "";
         }
     }
 
@@ -192,9 +296,10 @@ public class Eve : MonoBehaviour {
         if(col.gameObject.name.Contains("Energy"))
         {
             Destroy(col.gameObject);
-            energy++;
-            energyText.text = energy.ToString();
-            energyBar.value++;
+            healthInfo.addEnergy(1);
+            pickup.Play();
+            
+            
         }
     }
 }

@@ -9,12 +9,18 @@ public class EveHealth : MonoBehaviour {
     private int currentHealth;
     private int maxStamina;
     private int stamina;
+    private int energy;
     private bool isDead;
     private bool isHit;
     public Slider healthBar;
     public Slider staminaBar;
+    public Slider energyBar;
+    public Text energyText;
+    public Text staminaText;
+    public Text healthText;
     public Animator anim;
     private float timer;
+    private float timer2;
     private bool nearEnemy;
     private string enemy;
 
@@ -35,14 +41,29 @@ public class EveHealth : MonoBehaviour {
         healthBar.maxValue = maxHealth;
         healthBar.value = maxHealth;
 
+        energyBar = GameObject.Find("EnergyBar").GetComponent<Slider>();
+        energyBar.maxValue = 50;
+        energyBar.value = 0;
+
+        energyText = GameObject.Find("EnergyText").GetComponent<Text>();
+        energyText.text = "0";
+        energy = 0;
+
+        staminaText = GameObject.Find("StaminaText").GetComponent<Text>();
+        staminaText.text = stamina.ToString();
+
+        healthText = GameObject.Find("HealthText").GetComponent<Text>();
+        healthText.text = currentHealth.ToString();
+
     }
 	
 	// Update is called once per frame
 	void Update () {
         timer += Time.deltaTime;
+        timer2 += Time.deltaTime;
 
-        
-        if(currentHealth <= 0)
+
+        if (currentHealth <= 0)
         {
             isDead = true;
             anim.SetBool("isDead", true);
@@ -54,12 +75,43 @@ public class EveHealth : MonoBehaviour {
             if (currentHealth < maxHealth) {
                 currentHealth++;
                 healthBar.value = currentHealth;
+                healthText.text = currentHealth.ToString();
             }
             timer = 0;
         }
-       
-		
-	}
+
+        if (timer2 >= 7)
+        {
+            if (stamina < maxStamina)
+            {
+                stamina++;
+                staminaBar.value = stamina;
+                staminaText.text = stamina.ToString();
+            }
+            timer2 = 0;
+        }
+
+
+    }
+
+    public void decreaseStamina()
+    {
+        stamina--;
+        staminaBar.value--;
+        staminaText.text = stamina.ToString();
+    }
+
+    public void addEnergy(int num)
+    {
+        energy += num;
+        energyText.text = energy.ToString();
+        energyBar.value++;
+    }
+
+    public int getEnergy()
+    {
+        return energy;
+    }
 
     public void setFighting(string enemyName)
     {
@@ -78,9 +130,10 @@ public class EveHealth : MonoBehaviour {
 
     public void hitEnemy()
     {
-        anim.SetBool("Punch", true);
+        anim.SetTrigger("Punch");
         stamina--;
         staminaBar.value--;
+        staminaText.text = stamina.ToString();
     }
 
     public void Damage()
@@ -106,6 +159,7 @@ public class EveHealth : MonoBehaviour {
         Debug.Log(damage);
         currentHealth -= damage;
         healthBar.value = currentHealth;
+        healthText.text = currentHealth.ToString();
 
 
     }
@@ -133,18 +187,23 @@ public class EveHealth : MonoBehaviour {
         if (level == 1)
         {
             maxHealth = 10;
+            
         }
         else if (level == 2)
         {
             maxHealth = 20;
+            currentHealth = maxHealth;
             healthBar.maxValue = maxHealth;
             healthBar.value = maxHealth;
+            healthText.text = currentHealth.ToString();
         }
         else if (level == 3)
         {
             maxHealth = 40;
+            currentHealth = maxHealth;
             healthBar.maxValue = maxHealth;
             healthBar.value = maxHealth;
+            healthText.text = currentHealth.ToString();
         }
     }
 }

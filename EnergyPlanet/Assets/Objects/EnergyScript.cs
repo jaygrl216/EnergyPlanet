@@ -6,6 +6,7 @@ public class EnergyScript : MonoBehaviour {
     private float rotateSpeed = 40.0f;
     private ParticleSystem particle;
     public Color myColor = Color.yellow;
+   
 
 
     // Use this for initialization

@@ -9,16 +9,22 @@ public class Alien : MonoBehaviour {
     private float speed = 2.0f;
     private float rotateSpeed = 3.0f;
     private EveHealth eveHealth;
+    private AlienHealth myHealth;
     private float attackTimer = 0;
     private bool canAttack = true;
     private double distance;
     private Vector3 initialPos;
+    private bool deathCounter = false;
+    private float deathTime = 0;
+    private AudioSource punch;
 
 
     void Start () {
 		eve = GameObject.Find("EvePrefab");
         anim = GetComponent<Animator>();
         eveHealth = eve.GetComponent<EveHealth>();
+        myHealth = GetComponent<AlienHealth>();
+        punch = GetComponent<AudioSource>();
     }
 	
 
@@ -28,6 +34,23 @@ public class Alien : MonoBehaviour {
 
     void FixedUpdate()
     {
+        if(myHealth.Dead())
+        {
+            deathCounter = true;
+            eveHealth.setFighting("");
+            
+        }
+        if (deathCounter)
+        {
+            deathTime += Time.deltaTime;
+        }
+
+        if (deathTime >= 4.0f)
+        {
+            eveHealth.addEnergy(2);
+            Destroy(gameObject);
+        }
+
         distance = Vector3.Distance(transform.position, eve.transform.position);
         if (distance <= 8.0f && distance >= 1.2f)
         {
@@ -60,14 +83,14 @@ public class Alien : MonoBehaviour {
     {
         if (eveHealth.Dead())
         {
-            anim.SetBool("punch", false);
             anim.SetBool("isWalking", false);
         }
         else
         {
             if (canAttack)
             {
-                anim.SetBool("punch", true);
+                anim.SetTrigger("punch");
+                punch.Play();
                 canAttack = false;
 
                 eveHealth.Damage();
@@ -76,9 +99,8 @@ public class Alien : MonoBehaviour {
             }
             else
             {
-                anim.SetBool("punch", false);
                 attackTimer += Time.deltaTime;
-                if (attackTimer >= 3.0f)
+                if (attackTimer >= 2.0f)
                 {
                     canAttack = true;
                     attackTimer = 0;

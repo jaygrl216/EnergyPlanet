@@ -12,16 +12,19 @@ public class AlienHealth : MonoBehaviour
     private bool isHit;
     public Slider healthBar;
     public Animator anim;
+    int alienNum;
 
     // level 1 max health = 8, level 2 max health = 15, level 3 max health = 25
 
     void Start()
     {
+        char num = gameObject.name[gameObject.name.Length - 1];
+
         level = 1;
-        maxHealth = 8;
+        maxHealth = 10;
         currentHealth = maxHealth;
         anim = GetComponent<Animator>();
-        healthBar = GameObject.Find("AlienHealth").GetComponent<Slider>();
+        healthBar = GameObject.Find("AlienHealth" + num).GetComponent<Slider>();
         healthBar.maxValue = maxHealth;
         healthBar.value = maxHealth;
 
@@ -30,10 +33,12 @@ public class AlienHealth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        
+
         if (currentHealth <= 0)
         {
             isDead = true;
-            //anim.SetBool("isDead", true);
+            anim.SetBool("isDead", true);
         }
 
     }
@@ -58,9 +63,9 @@ public class AlienHealth : MonoBehaviour
                 break;
         }
 
-        
+        Debug.Log("Old health was " + currentHealth);
         currentHealth -= damage;
-        Debug.Log("Alien was hit with " + damage + "and current health is" + currentHealth);
+        Debug.Log("Alien was hit with " + damage + "and current health is " + currentHealth);
         healthBar.value = currentHealth;
 
 
@@ -83,17 +88,17 @@ public class AlienHealth : MonoBehaviour
 
         if (level == 1)
         {
-            maxHealth = 8;
+            maxHealth = 10;
         }
         else if (level == 2)
         {
-            maxHealth = 15;
+            maxHealth = 20;
             //healthBar.maxValue = maxHealth;
             //healthBar.value = maxHealth;
         }
         else if (level == 3)
         {
-            maxHealth = 25;
+            maxHealth = 30;
             //healthBar.maxValue = maxHealth;
             //healthBar.value = maxHealth;
         }

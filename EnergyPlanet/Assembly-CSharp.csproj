@@ -50,6 +50,7 @@
      <Compile Include="Assets\Characters\Alien\AlienHealth.cs" />
      <Compile Include="Assets\Characters\Eve\Eve.cs" />
      <Compile Include="Assets\Characters\Eve\EveHealth.cs" />
+     <Compile Include="Assets\Control.cs" />
      <Compile Include="Assets\Objects\EnergyScript.cs" />
      <Compile Include="Assets\Objects\SpaceShips\SpaceShip1\Ship.cs" />
      <None Include="Assets\Standard Assets\Environment\Water\Water4\Shaders\FXWater4Simple.shader" />
